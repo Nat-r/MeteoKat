@@ -36,15 +36,17 @@ BleuBot : '#0096cf',
 GrisTop : '#e4e9e5',
 GrisBot : '#929397',
 VioletTop : '#922790',
-VioletBot : '#662d94'
+VioletBot : '#662d94',
+VertTop : '#89c83b',
+VertBot : '#089644'
 }
-var temp = 'Soleil'
+var temp = 'Neige'
 function ChangeColor(event) {
   
   if (temp == 'Soleil') {
     color1 = color.JauneTop;
     color2 = color.JauneBot;
-  } else if (temp == 'Froid') {
+  } else if (temp == 'Neige') {
     color1 = color.BleuTop;
     color2 = color.BleuBot;
   }else if (temp == 'Pluie') {
@@ -53,6 +55,9 @@ function ChangeColor(event) {
   }else if (temp == 'Orrage') {
     color1 = color.VioletTop;
     color2 = color.VioletBot;
+  }else if (temp == 'Nuage') {
+    color1 = color.VertTop;
+    color2 = color.VertBot;
   }
 }
 ChangeColor();
