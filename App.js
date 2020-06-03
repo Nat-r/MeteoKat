@@ -40,7 +40,7 @@ VioletBot : '#662d94',
 VertTop : '#89c83b',
 VertBot : '#089644'
 }
-var temp = 'Neige'
+var temp = 'Soleil'
 function ChangeColor(event) {
   
   if (temp == 'Soleil') {
