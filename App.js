@@ -1,10 +1,10 @@
-import * as React from 'react'
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, ScrollView, Image, Button, Picker, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { CustomPicker } from 'react-native-custom-picker'
 import { NavigationContainer } from '@react-navigation/native';
 import { render } from 'react-dom';
 import { createStackNavigator } from '@react-navigation/stack';
+import * as Location from 'expo-location';
 var color1 = ''
 var color2 = ''
 var icon = ''
@@ -13,7 +13,25 @@ var heure = ''
 var temp = ''
 var temps = ''
 var change = 'Soleil'
-
+var code = ''
+var json = ''
+/*var date = new Date(objet.list[i].dt*1000);
+var jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+var day = jours[date.getDay()];
+var dayNum = date.getDate();
+var month = mois[date.getMonth()];
+var year = date.getUTCFullYear();*/
+async function getMoviesFromApiAsync() {
+  try {
+    let response = await fetch(
+      'https://api.openweathermap.org/data/2.5/forecast?q=villeurbanne&APPID=d089edbc992c5c7e8694a927e9ad2179'
+    );
+    json = await response.json();
+    console.log(json);
+  } catch (error) {
+    console.error(error);
+  }
+}
 function Soleil({ navigation  }) {
     return (
       <LinearGradient
@@ -133,8 +151,36 @@ function Nuage({ navigation  }) {
 
   );
 }
+export default class Meteo extends React.Component{
+  constructor(props){
+    super(props)
+    this.state = {}
+  }
 
-function Meteo({ navigation }){
+  componentDidMount(){
+    this.bo();
+    this.api();
+    
+  }
+
+  bo = async() => {
+    Location.requestPermissionsAsync();
+    this.coord = await Location.getCurrentPositionAsync();
+    alert(this.coord)
+    //fetch("https://api.opencagedata.com/geocode/v1/json?q="+this.coord.coords.latitude+"+"+this.coord.coords.longitude+"&key=8c0089d5fb374e85bdfd93be1d78e8f1")
+     // .then(res => res.json())
+      //.then((result) => {this.setState({"city" : result.results[0].components.city});this.changeCity();} , (error) => {this.setState({"error" : error})} );
+
+  this.setState({"city" : "Lyon"});
+
+}
+  api(){
+    fetch("https://api.openweathermap.org/data/2.5/forecast?q="+'villeurbanne'+"&APPID=fa956c3c094574e034c48dc970215933")
+     .then(res => res.json())
+     .then((result) => {if (result.cod == "200") {this.setState({"tab" : result});}} , (error) => {this.setState({"error" : error})} );
+  }
+  render(){
+   
     return (
       <LinearGradient 
         colors={[color1, color2]}
@@ -150,12 +196,17 @@ function Meteo({ navigation }){
           <View style={styles.textcont}>
             <Text style={styles.texttemp}>{temp}  | <Text style={styles.texttemps}>{temps}</Text></Text> 
           </View>
-            <Button style={styles.btn} title="Dev Mode" onPress={() => navigation.navigate('Dev Mode')} />
+            <Button style={styles.btn} title="Dev Mode" onPress={() => this.props.navigation.navigate('Dev Mode')} />
           </View>
         </ScrollView>
       </LinearGradient>
     );
-  }
+ 
+}
+}
+function Home({ navigation }) {
+  return <View><Meteo navigation={navigation}></Meteo></View>
+}
 function Dev({ navigation }) {
   return (
     <LinearGradient 
@@ -186,12 +237,12 @@ function Dev({ navigation }) {
 }
 
 const Stack = createStackNavigator();
-export default function App(){
+function App(){
 
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{headerShown: false}} initialRouteName="Home">
-        <Stack.Screen name="Home" component={Meteo} />
+        <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="Dev Mode" component={Dev} />
         <Stack.Screen name="Soleil" component={Soleil} />
         <Stack.Screen name="Neige" component={Neige} />
@@ -332,11 +383,6 @@ const donnesnuage = {
   temps : 'Nuage',
 }
 var test = 'Pluie'
-function changeTheme(event) {
-  change = event;
-  //alert(change)
-  ChangeColor();
-}
 function ChangeColor(event) {
   
   if (change == 'Soleil') {
