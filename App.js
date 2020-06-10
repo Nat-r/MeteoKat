@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { render } from 'react-dom';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as Location from 'expo-location';
+import ReactLoading from 'react-loading';
 var color1 = ''
 var color2 = ''
 var icon = ''
@@ -15,23 +16,6 @@ var temps = ''
 var change = 'Soleil'
 var code = ''
 var json = ''
-/*var date = new Date(objet.list[i].dt*1000);
-var jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
-var day = jours[date.getDay()];
-var dayNum = date.getDate();
-var month = mois[date.getMonth()];
-var year = date.getUTCFullYear();*/
-async function getMoviesFromApiAsync() {
-  try {
-    let response = await fetch(
-      'https://api.openweathermap.org/data/2.5/forecast?q=villeurbanne&APPID=d089edbc992c5c7e8694a927e9ad2179'
-    );
-    json = await response.json();
-    console.log(json);
-  } catch (error) {
-    console.error(error);
-  }
-}
 function Soleil({ navigation  }) {
     return (
       <LinearGradient
@@ -151,36 +135,88 @@ function Nuage({ navigation  }) {
 
   );
 }
-export default class Meteo extends React.Component{
+class Meteo extends React.Component{
   constructor(props){
     super(props)
     this.state = {}
+    this.coord = {}
+    
   }
 
   componentDidMount(){
     this.bo();
-    this.api();
-    
+    this.date();
+    setInterval(() => {
+      this.date();
+    }, 1000);
   }
 
   bo = async() => {
     Location.requestPermissionsAsync();
     this.coord = await Location.getCurrentPositionAsync();
-    alert(this.coord)
-    //fetch("https://api.opencagedata.com/geocode/v1/json?q="+this.coord.coords.latitude+"+"+this.coord.coords.longitude+"&key=8c0089d5fb374e85bdfd93be1d78e8f1")
-     // .then(res => res.json())
-      //.then((result) => {this.setState({"city" : result.results[0].components.city});this.changeCity();} , (error) => {this.setState({"error" : error})} );
+    fetch("https://api.opencagedata.com/geocode/v1/json?q="+this.coord.coords.latitude+"+"+this.coord.coords.longitude+"&key=d292c0359fa3464c98f1b7e09f7d8a7e")
+      .then(res => res.json())
+      .then((result) => {this.setState({"city" : result.results[0].components.city}); this.api();} , (error) => {this.setState({"error" : error})} );
 
   this.setState({"city" : "Lyon"});
-
+  
 }
   api(){
-    fetch("https://api.openweathermap.org/data/2.5/forecast?q="+'villeurbanne'+"&APPID=fa956c3c094574e034c48dc970215933")
+    fetch("https://api.openweathermap.org/data/2.5/forecast?q="+this.state.city+"&appid=d089edbc992c5c7e8694a927e9ad2179")
      .then(res => res.json())
-     .then((result) => {if (result.cod == "200") {this.setState({"tab" : result});}} , (error) => {this.setState({"error" : error})} );
+     .then((result) => {if (result.cod == "200") {this.setState({"objet" : result});}} , (error) => {this.setState({"error" : error})} );
   }
-  render(){
-   
+
+  date(){
+      var g = new Date();
+      this.heur = g.getHours();
+      this.minu = g.getMinutes();
+      this.jour = g.getDay();
+      this.setState({});
+      this.day = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'] 
+      if (this.minu < 10) {
+        this.minu = "0" + this.minu
+      }
+  }
+
+  style(){
+    if (this.state.objet.list[0].weather[0].main == 'Rain') {
+      color1 = color.GrisTop;
+      color2 = color.GrisBot;
+      icon = icones.pluie;
+      temps = donnespluie.temps;
+    }
+    else if (this.state.objet.list[0].weather[0].main == 'Clouds') {
+      color1 = color.VertTop;
+      color2 = color.VertBot;
+      icon = icones.nuage;
+      temps = donnesnuage.temps;
+    }
+    else if (this.state.objet.list[0].weather[0].main == 'Clear') {
+      color1 = color.JauneTop;
+      color2 = color.JauneBot;
+      icon = icones.sun;
+      temps = donnessun.temps;
+    }
+    else if (this.state.objet.list[0].weather[0].main == 'Snow') {
+      color1 = color.BleuTop;
+      color2 = color.BleuBot;
+      icon = icones.snow;
+      temps = donnessnow.temps;
+    }
+    else if (this.state.objet.list[0].weather[0].main == 'Thunderstorm') {
+      color1 = color.VioletTop;
+      color2 = color.VioletBot;
+      icon = icones.orage;
+      temps = donnesorage.temps;
+    }
+  }
+  temp(){
+		return (this.state.objet.list[0].main.temp-273.15).toFixed(0);
+  }
+  render(){ 
+   if (this.state.objet != undefined) {
+      this.style();
     return (
       <LinearGradient 
         colors={[color1, color2]}
@@ -188,24 +224,33 @@ export default class Meteo extends React.Component{
       >
         <ScrollView>
           <View style={styles.container}>
-            <Text style={styles.textjours}>{jours}</Text>
-            <Text style={styles.textheure}>{heure}</Text>
+            <Text style={styles.textjours}>{this.day[this.jour]}</Text>
+            <Text style={styles.textheure}>{this.heur}:{this.minu}</Text>
             <View style={styles.imgcont}>
             <Image style={styles.img} source={icon}/>
           </View>
           <View style={styles.textcont}>
-            <Text style={styles.texttemp}>{temp}  | <Text style={styles.texttemps}>{temps}</Text></Text> 
+            <Text style={styles.texttemp}>{this.temp()}°C  | <Text style={styles.texttemps}>{temps}</Text></Text> 
           </View>
             <Button style={styles.btn} title="Dev Mode" onPress={() => this.props.navigation.navigate('Dev Mode')} />
           </View>
         </ScrollView>
       </LinearGradient>
     );
- 
+  }else{
+    return (
+      <LinearGradient 
+        colors={[color.JauneTop, color.JauneBot]}
+        style={{flex: 1}}
+      >
+      <Text style={styles.char}>Chargement</Text>
+      </LinearGradient>
+    );
+  }
 }
 }
 function Home({ navigation }) {
-  return <View><Meteo navigation={navigation}></Meteo></View>
+  return <Meteo navigation={navigation}></Meteo>
 }
 function Dev({ navigation }) {
   return (
@@ -237,7 +282,7 @@ function Dev({ navigation }) {
 }
 
 const Stack = createStackNavigator();
-function App(){
+export default function App(){
 
   return (
     <NavigationContainer>
@@ -298,16 +343,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom : 200 
   },
-  picker : {
-    width: 150,
-    color: 'white',
-  },
-  pickernone : {
-    width: 150,
-    display: "none",
-  },
-  btn : {
-    
+  char : {
+    fontSize : 50,
+    alignItems: 'center',
+    paddingTop : 380,
+    paddingLeft : 50,
+    color : "white",
   }
 });
 
@@ -382,49 +423,3 @@ const donnesnuage = {
   temp : '22°',
   temps : 'Nuage',
 }
-var test = 'Pluie'
-function ChangeColor(event) {
-  
-  if (change == 'Soleil') {
-    color1 = color.JauneTop;
-    color2 = color.JauneBot;
-    icon = icones.sun;
-    jours = donnessun.jours;
-    heure = donnessun.heure;
-    temp = donnessun.temp;
-    temps = donnessun.temps;
-  } else if (change == 'Neige') {
-    color1 = color.BleuTop;
-    color2 = color.BleuBot;
-    icon = icones.snow;
-    jours = donnessnow.jours;
-    heure = donnessnow.heure;
-    temp = donnessnow.temp;
-    temps = donnessnow.temps;
-  }else if (change == 'Pluie') {
-    color1 = color.GrisTop;
-    color2 = color.GrisBot;
-    icon = icones.pluie;
-    jours = donnespluie.jours;
-    heure = donnespluie.heure;
-    temp = donnespluie.temp;
-    temps = donnespluie.temps;
-  }else if (change == 'Orage') {
-    color1 = color.VioletTop;
-    color2 = color.VioletBot;
-    icon = icones.orage;
-    jours = donnesorage.jours;
-    heure = donnesorage.heure;
-    temp = donnesorage.temp;
-    temps = donnesorage.temps;
-  }else if (change == 'Nuage') {
-    color1 = color.VertTop;
-    color2 = color.VertBot;
-    icon = icones.nuage;
-    jours = donnesnuage.jours;
-    heure = donnesnuage.heure;
-    temp = donnesnuage.temp;
-    temps = donnesnuage.temps;
-  }
-}
-ChangeColor();
